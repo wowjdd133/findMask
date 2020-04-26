@@ -1,0 +1,10 @@
+.overlay {
+  background: rgba(255,255,255,0.5); 
+  border: 1px solid #ccc;
+  margin-left:5px;
+  transition: transform .2s;
+}
+.overlay:hover {
+  transform: scale(2.0);
+  cursor: pointer;
+}
