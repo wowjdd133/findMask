@@ -20,94 +20,106 @@ const MapContainer = styled.div`
   position: relative;
 `;
 
-// const handleClick = (name) => {
-//   console.log(name);
-// };
+const FilterContainer = styled.div`
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  height: 300px;
+  z-index: 9999;
+  border: 1px solid #000000;
+  background: rgba(124, 255, 124, 0.6);
+`;
 
-const displayMarker = (markerPosition, stat, map, name, code, MapStore) => {
-  let imageSrc = "images/logo.jpg";
-
-  if (name === "은행약국") {
-    console.log(MapStore.getRemainStatToNum(stat));
-    console.log(MapStore.getRemainStatToImage(stat));
-  }
-
-  // switch (stat) {
-  //   case "plenty":
-  //     imageSrc = "images/green.png";
-  //     break;
-  //   case "some":
-  //     imageSrc = "images/orange.png";
-  //     break;
-  //   case "few":
-  //     imageSrc = "images/red.png";
-  //     break;
-  //   case "empty":
-  //     imageSrc = "images/gray.png";
-  //     break;
-  //   default:
-  //     console.log(stat);
-  //     imageSrc = "images/black.png";
-  // }
-  imageSrc = MapStore.getRemainStatToImage(stat);
-
-  const imageSize = new kakao.maps.Size(64, 69);
-  const imageOption = { offset: new kakao.maps.Point(27, 69) };
-
-  const markerImage = new kakao.maps.MarkerImage(
-    imageSrc,
-    imageSize,
-    imageOption
-  );
-  const marker = new kakao.maps.Marker({
-    position: markerPosition,
-    image: markerImage,
-    clickable: true,
-  });
-
-  marker.setMap(map);
-
-  // kakao.maps.event.addListener(marker, "mouseover", () => {
-  //   imageSize = new kakao.maps.Size(92, 98);
-  //   imageOption = { offset: new kakao.maps.Point(40, 90) };
-  //   markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-  //   marker.setImage(markerImage);
-  // });
-
-  // kakao.maps.event.addListener(marker, "mouseout", () => {
-  //   imageSize = new kakao.maps.Size(64, 69);
-  //   imageOption = { offset: new kakao.maps.Point(27, 69) };
-  //   markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-  //   marker.setImage(markerImage);
-  // });
-
-  const $content = document.createElement("div");
-  $content.innerHTML = name;
-  $content.name = code;
-  $content.className = "overlay";
-  $content.addEventListener(
-    "click",
-    (event) => {
-      MapStore.getDataToCode(event.target.name);
-    },
-    { passive: true }
-  );
-
-  const content = $content;
-
-  const customOverlay = new kakao.maps.CustomOverlay({
-    position: markerPosition,
-    content,
-    yAnchor: 2,
-    zIndex: 2,
-    clickable: true,
-  });
-
-  customOverlay.setMap(map);
-};
+const FilterContent = styled.div``;
 
 const Map = ({ store }) => {
   const [showSidebar, setShowSidebar] = useState(false);
+  const [filters, setFilters] = useState([true, true, true, true, true]);
+  // const [plentyChecked, setPlentyChecked] = useState(true);
+  // const [someChecked, setSomeChecked] = useState(true);
+  // const [fewChecked, setFewChecked] = useState(true);
+  // const [emptyChecked, setEmptyChecked] = useState(true);
+  // const [breakChecked, setBreakChecked] = useState(true);
+
+  const handleChange = (e) => {
+    // setFilters(...filters, !filters[e.target.name]);
+    let data = [...filters];
+    data[e.target.name] = !filters[e.target.name];
+    setFilters([...data]);
+    store.MapStore.hideMarker(data);
+  };
+
+  //create랑 display 나누기
+  const displayMarker = (markerPosition, stat, map, name, code, MapStore) => {
+    let imageSrc = "images/logo.jpg";
+    imageSrc = MapStore.getRemainStatToImage(stat);
+
+    const imageSize = new kakao.maps.Size(64, 69);
+    const imageOption = {
+      offset: new kakao.maps.Point(27, 69),
+    };
+
+    const markerImage = new kakao.maps.MarkerImage(
+      imageSrc,
+      imageSize,
+      imageOption
+    );
+    const marker = new kakao.maps.Marker({
+      position: markerPosition,
+      image: markerImage,
+      clickable: true,
+    });
+
+    marker.setMap(map);
+
+    const $content = document.createElement("div");
+    $content.innerHTML = name;
+    $content.name = code;
+    $content.className = "overlay";
+    $content.addEventListener(
+      "click",
+      (event) => {
+        MapStore.getDataToCode(event.target.name);
+      },
+      {
+        passive: true,
+      }
+    );
+
+    const content = $content;
+
+    const customOverlay = new kakao.maps.CustomOverlay({
+      position: markerPosition,
+      content,
+      yAnchor: 2,
+      zIndex: 2,
+      clickable: true,
+    });
+
+    customOverlay.setMap(map);
+
+    MapStore.setMarker(customOverlay, stat);
+
+    // if (stat === "plenty" && !plentyChecked) {
+    //   marker.setVisible(false);
+    //   customOverlay.setVisible(false);
+    // } else if (stat === "some" && !someChecked) {
+    //   marker.setVisible(false);
+    //   customOverlay.setVisible(false);
+    // } else if (stat === "few" && !fewChecked) {
+    //   marker.setVisible(false);
+    //   customOverlay.setVisible(false);
+    // } else if (stat === "empty" && !emptyChecked) {
+    //   marker.setVisible(false);
+    //   customOverlay.setVisible(false);
+    // } else if (stat === "break" && !breakChecked) {
+    //   marker.setVisible(false);
+    //   customOverlay.setVisible(false);
+    // }
+  };
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -163,25 +175,82 @@ const Map = ({ store }) => {
       });
     };
   }, []);
+
   useEffect(() => {
-    console.log(store.MapStore.selectData);
     return () => {
       setShowSidebar(true);
     };
   }, [store.MapStore.selectData]);
 
+  useEffect(() => {
+    return () => {
+      store.MapStore.getMarker();
+    };
+  }, []);
+
   return (
     <MapContainer>
-      <MapContent id="map" />
-      {showSidebar ? (
+      <FilterContainer>
+        {" "}
+        {filters.map((filter, index) => (
+          <FilterContent>
+            <input
+              type="checkbox"
+              checked={filter}
+              onChange={handleChange}
+              name={index}
+            />{" "}
+          </FilterContent>
+        ))}{" "}
+        {/* <FilterContent>
+                <input
+                  type="checkbox"
+                  checked={plentyChecked}
+                  onChange={handleChange}
+                />
+                <div>몇 개</div>
+              </FilterContent> */}{" "}
+        {/* <FilterContent>
+                <input
+                  type="checkbox"
+                  checked={someChecked}
+                  onChange={handleChange1}
+                />
+                <div>몇 개</div>
+              </FilterContent>
+              <FilterContent>
+                <input
+                  type="checkbox"
+                  checked={fewChecked}
+                  onChange={handleChange2}
+                />
+                <div>몇 개</div>
+              </FilterContent>
+              <FilterContent>
+                <input
+                  type="checkbox"
+                  checked={emptyChecked}
+                  onChange={handleChange3}
+                />
+                <div>몇 개</div>
+              </FilterContent>
+              <FilterContent>
+                <input
+                  type="checkbox"
+                  checked={breakChecked}
+                  onChange={handleChange4}
+                />
+                <div>몇 개</div> */}{" "}
+        {/* </FilterContent> */}{" "}
+      </FilterContainer>{" "}
+      <MapContent id="map" />{" "}
+      {showSidebar && (
         <Sidebar
           // data={store.MapStore.selectData}
           // getRemainStatToEng={store.MapStore.getRemainStatToEng}
           store={store.MapStore}
         />
-      ) : (
-        <div>hi</div>
-      )}
+      )}{" "}
     </MapContainer>
   );
 };

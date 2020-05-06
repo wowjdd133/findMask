@@ -1,10 +1,11 @@
 import React from "react";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 
 const Sidebar = styled.div`
   display: flex;
   height: 100%;
-  width: 25%;
+  width: 480px;
   top: 0;
   right: 0;
   overflow-x: hidden;
@@ -15,21 +16,42 @@ const Sidebar = styled.div`
 `;
 
 const SideContent = styled.div`
-  text-align: center;
-  height: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 40%;
   padding: 15px 15px 25px 25px;
+  font-size: 23px;
+`;
+
+const GetDirectionBox = styled.div`
+  border: 1px solid #000000;
+  background: rgba(255, 255, 255, 0.4);
+  font-size: 32px;
+  transition: transform 0.2s;
+  &:hover {
+    transform: scale(1.2);
+  }
 `;
 
 const sidebar = ({ store }) => {
-  console.log(store.selectData);
+  let data = store.selectData;
   return (
     <Sidebar>
       <SideContent>
-        <h1>{store.selectData.name}</h1>
-        <p>{store.getRemainStatToNum(store.selectData.remain_stat)}</p>
-        <p>{store.selectData.addr}</p>
-        <p>{store.selectData.stock_at}</p>
-        <p>{store.selectData.created_at}</p>
+        <h1>{data.name}</h1>
+        <p>수량: {store.getRemainStatToNum(data.remain_stat)}</p>
+        <p>입고시간: {data.stock_at}</p>
+        <p>갱신일자: {data.created_at}</p>
+        <p>주소: {data.addr}</p>
+        <GetDirectionBox>
+          <a
+            href={`https://map.kakao.com/link/to/${data.name},${data.lat},${data.lng}`}
+          >
+            길찾기
+          </a>
+        </GetDirectionBox>
       </SideContent>
     </Sidebar>
   );
