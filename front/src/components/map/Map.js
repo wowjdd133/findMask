@@ -191,7 +191,6 @@ const Map = ({ store }) => {
   return (
     <MapContainer>
       <FilterContainer>
-        {" "}
         {filters.map((filter, index) => (
           <FilterContent>
             <input
@@ -199,9 +198,9 @@ const Map = ({ store }) => {
               checked={filter}
               onChange={handleChange}
               name={index}
-            />{" "}
+            />
           </FilterContent>
-        ))}{" "}
+        ))}
         {/* <FilterContent>
                 <input
                   type="checkbox"
@@ -209,7 +208,7 @@ const Map = ({ store }) => {
                   onChange={handleChange}
                 />
                 <div>몇 개</div>
-              </FilterContent> */}{" "}
+              </FilterContent> */}
         {/* <FilterContent>
                 <input
                   type="checkbox"
@@ -240,17 +239,17 @@ const Map = ({ store }) => {
                   checked={breakChecked}
                   onChange={handleChange4}
                 />
-                <div>몇 개</div> */}{" "}
-        {/* </FilterContent> */}{" "}
-      </FilterContainer>{" "}
-      <MapContent id="map" />{" "}
+                <div>몇 개</div> */}
+        {/* </FilterContent> */}
+      </FilterContainer>
+      <MapContent id="map" />
       {showSidebar && (
         <Sidebar
           // data={store.MapStore.selectData}
           // getRemainStatToEng={store.MapStore.getRemainStatToEng}
           store={store.MapStore}
         />
-      )}{" "}
+      )}
     </MapContainer>
   );
 };
