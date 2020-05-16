@@ -6,8 +6,10 @@ import stores from "./stores";
 
 const Content = styled.div`
   position: relative;
-  margin-left: 240px;
   height: 100%;
+  padding-left: 200px;
+  display: flex;
+  justify-content: center;
 `;
 
 function App() {
