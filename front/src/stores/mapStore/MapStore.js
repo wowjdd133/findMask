@@ -3,8 +3,10 @@ import MapRepository from "./MapRepository";
 
 class MapStore {
   @observable.ref maskData = [];
-  m = 5000;
   @observable.ref selectData = {};
+  @observable loading = true;
+  //주변 탐지범위
+  m = 5000;
   remainStat = new Map()
     .set("plenty", ["100개 이상", "images/green.png"])
     .set("some", ["30~99개", "images/orange.png"])
@@ -13,78 +15,128 @@ class MapStore {
     .set("break", ["판매 중지", "images/black.png"]);
   map = null;
   marker = [];
-  // constructor() {
-  //   this.remainStat.set("plenty", "100개 이상")
-  //   this.remainStat.set("some", "30~99개")
-  //   this.remainStat.set("few", "2~29개")
-  //   this.remainStat.set("empty", "0~1개")
-  //   this.remainStat.set("break", "판매 중지");
-  // }
+  overlay = [];
 
-  setMap(map) {
-    this.map(map);
-  }
-
-  getMap() {
-    return map;
-  }
-
-  setMarker(marker, stat) {
-    this.marker.push({ marker, stat });
-  }
-
-  getMarker() {
-    console.log(this.marker);
-  }
-
+  //마커와 오버레이 숨기는 함수.
+  //marker = marker.stat지님
   hideMarker(stats) {
-    this.marker.forEach((data) => {
+    this.marker.forEach((data, index) => {
       data.marker.setVisible(true);
+      this.overlay[index].setVisible(true);
       if (data.stat == "plenty") {
-        if (!stats[0]) data.marker.setVisible(false);
+        if (!stats[0]) {
+          data.marker.setVisible(false);
+          this.overlay[index].setVisible(false);
+        }
       } else if (data.stat == "some") {
-        if (!stats[1]) data.marker.setVisible(false);
+        if (!stats[1]) {
+          data.marker.setVisible(false);
+          this.overlay[index].setVisible(false);
+        }
       } else if (data.stat == "few") {
-        if (!stats[2]) data.marker.setVisible(false);
+        if (!stats[2]) {
+          data.marker.setVisible(false);
+          this.overlay[index].setVisible(false);
+        }
       } else if (data.stat == "empty") {
-        if (!stats[3]) data.marker.setVisible(false);
+        if (!stats[3]) {
+          data.marker.setVisible(false);
+          this.overlay[index].setVisible(false);
+        }
       } else if (data.stat == "break") {
-        if (!stats[4]) data.marker.setVisible(false);
+        if (!stats[4]) {
+          data.marker.setVisible(false);
+          this.overlay[index].setVisible(false);
+        }
       }
     });
+    //   data.marker.setVisible(true);
+    //   data.overlay.setVisible(true);
+    // });
   }
 
+  //판매처 data 받아오는 함수.
   @action
   async getData(lat, lng) {
-    // console.log("lat: ", lat, "lng: ", lng);
-    // await MapRepository.getData(lat, lng, this.m);
+    this.loading = true;
     const data = await MapRepository.getData(lat, lng, this.m);
-
     this.maskData = data.data;
   }
 
+  @action
+  loadingComplete() {
+    this.loading = false;
+  }
+
+  //cick한 판매처의 code값을 통해 데이터 받아옴.
   getDataToCode(code) {
     this.selectData = this.maskData.stores.find((data) => data.code === code);
   }
 
   //받은 값에서 [0] 또는 [1]로 배열 내 값을 받으면 cannot read property 0,1 of underfined가 뜬다.
   getRemainStatToNum(stat) {
-    let data = this.remainStat.get(stat);
-    // console.log(data);
-    return Object.values(data)[0];
-  }
-
-  getRemainStatToImage(stat) {
-    // return Object.values(this.remainStat.get(stat))[1] || "";
-    // console.log(typeof this.remainStat.get(stat));
-    // console.log(this.remainStat.get(stat));
+    console.log(stat);
     try {
       let data = this.remainStat.get(stat);
-      console.log(data);
+      return Object.values(data)[0];
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  //stat에 맞는 이미지 src 반환
+  getRemainStatToImage(stat) {
+    try {
+      let data = this.remainStat.get(stat);
       return Object.values(data)[1];
     } catch (err) {
       console.log(err);
     }
+  }
+
+  @action
+  async addDistanceToData(lat, lon) {
+    this.maskData.stores.map((store) => {
+      store.remain_stat = this.getRemainStatToNum(store.remain_stat);
+      store.distance = this.getDistanceFromLatLon(
+        lat,
+        store.lat,
+        lon,
+        store.lng
+      );
+    });
+  }
+
+  @action
+  async sortData() {
+    this.maskData.stores.sort((a, b) =>
+      a.distance < b.distance ? -1 : a.distance == b.distance ? 0 : 1
+    );
+  }
+
+  getElaspedTime(time) {}
+
+  getDistanceFromLatLon(lat1, lat2, lon1, lon2) {
+    const deg2rad = (deg) => {
+      return (deg * Math.PI) / 180.0;
+    };
+
+    const rad2deg = (rad) => {
+      return (rad * 180) / Math.PI;
+    };
+
+    let theta = lon1 - lon2;
+    let dist =
+      Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.cos(deg2rad(theta));
+
+    dist = Math.acos(dist);
+    dist = rad2deg(dist);
+    dist = dist * 60 * 1.1515;
+
+    return (dist * 1.609344).toFixed(2);
   }
 }
 
