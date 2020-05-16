@@ -72,6 +72,7 @@ const Map = ({ store }) => {
       "click",
       (event) => {
         MapStore.getDataToCode(event.target.name);
+        setShowSidebar(true);
       },
       {
         passive: true,
@@ -88,7 +89,6 @@ const Map = ({ store }) => {
 
   //map을 mapsotre쪽으로 쓰는걸로
   const displayMarker = (markerPosition, stat, map, name, code, MapStore) => {
-    console.log(stat);
     let imageSrc = "images/logo.jpg";
     imageSrc = MapStore.getRemainStatToImage(stat);
     const content = createContent(name, code, MapStore);
@@ -167,18 +167,6 @@ const Map = ({ store }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.MapStore]);
 
-  //판매처 선택시 보여주는 함수 온클릭으로 바꾸자
-  useEffect(
-    () => () => {
-      setShowSidebar(true);
-    },
-    [store.MapStore.selectData]
-  );
-
-  // const handleSearchChange = (e) => {
-  //   setAddress(e.target.value);
-  // };
-
   const handleSubmit = (e) => {
     let geocoder = new kakao.maps.services.Geocoder();
 
@@ -219,13 +207,13 @@ const Map = ({ store }) => {
         address={address}
         onSubmit={handleSubmit}
         setAddress={setAddress}
-        displayMarker={displayMarker}
-        store={store}
       >
         <Filter filters={filters} onChange={handleChange} />
       </SearchContainer>
       <MapContent id="map" />
-      {showSidebar && <Sidebar store={store.MapStore} />}
+      {showSidebar && (
+        <Sidebar store={store.MapStore} setShowSidebar={setShowSidebar} />
+      )}
     </MapContainer>
   );
 };
