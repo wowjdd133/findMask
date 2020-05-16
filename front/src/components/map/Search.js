@@ -37,7 +37,7 @@ const SerachButton = styled.button`
 `;
 
 const Search = (props) => {
-  const { onSubmit, address, setAddress, displayMarker, store } = props;
+  const { onSubmit, address, setAddress } = props;
   console.log(props);
   return (
     <SearchContainer>
