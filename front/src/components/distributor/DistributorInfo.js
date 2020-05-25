@@ -2,11 +2,10 @@ import React from "react";
 import styled from "styled-components";
 
 const DistributorBox = styled.div`
-  width: 100%;
   border-bottom: 1px solid #ccc;
   border-top: 1px solid #ccc;
-  height: 200px;
-  font-size: 15px;
+  height: 150px;
+  font-size: 1rem;
   display: flex;
   justify-content: space-between;
   padding-left: 35px;
@@ -35,7 +34,6 @@ const DistributorTextBox = styled.div`
 
 const DistributorInfo = (props) => {
   const { info } = props;
-  console.log(info);
   return (
     <DistributorBox>
       <DistributorTextBox>
@@ -56,4 +54,4 @@ const DistributorInfo = (props) => {
   );
 };
 
-export default DistributorInfo;
+export default React.memo(DistributorInfo);
