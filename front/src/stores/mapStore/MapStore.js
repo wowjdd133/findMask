@@ -50,9 +50,6 @@ class MapStore {
         }
       }
     });
-    //   data.marker.setVisible(true);
-    //   data.overlay.setVisible(true);
-    // });
   }
 
   //판매처 data 받아오는 함수.
@@ -68,6 +65,11 @@ class MapStore {
     this.loading = false;
   }
 
+  @action
+  emptyingSelectData() {
+    this.selectData = null;
+  }
+
   //cick한 판매처의 code값을 통해 데이터 받아옴.
   getDataToCode(code) {
     this.selectData = this.maskData.stores.find((data) => data.code === code);
@@ -75,7 +77,6 @@ class MapStore {
 
   //받은 값에서 [0] 또는 [1]로 배열 내 값을 받으면 cannot read property 0,1 of underfined가 뜬다.
   getRemainStatToNum(stat) {
-    console.log(stat);
     try {
       let data = this.remainStat.get(stat);
       return Object.values(data)[0];
@@ -114,7 +115,36 @@ class MapStore {
     );
   }
 
-  getElaspedTime(time) {}
+  @action
+  async changeTimeToElapsedTime() {
+    await this.maskData.stores.map((store) => {
+      store.stock_at = this.getElaspedTime(store.stock_at);
+    });
+  }
+
+  getElaspedTime(time) {
+    const now = new Date();
+    const timeValue = new Date(
+      (time || "").replace(/-/g, "/").replace(/[TZ]/g, " ").split(".")[0]
+    );
+    const min = 60;
+    //date.getTime() -> msec. so /1000
+    let elaspedTime;
+    elaspedTime = (now.getTime() - timeValue.getTime()) / 1000;
+
+    let result = "0분전";
+
+    if (elaspedTime < min) return result;
+    else if (elaspedTime < min * 60)
+      result = Math.floor(elaspedTime / min) + "분 전";
+    else if (elaspedTime < min * 60 * 24)
+      result = Math.floor(elaspedTime / min / 60) + "시간 전";
+    else result = Math.floor(elaspedTime / min / 60 / 24) + "일 전";
+
+    console.log(time + "    " + result);
+
+    return result;
+  }
 
   getDistanceFromLatLon(lat1, lat2, lon1, lon2) {
     const deg2rad = (deg) => {
