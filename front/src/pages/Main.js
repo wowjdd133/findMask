@@ -1,8 +1,5 @@
 import React from "react";
+import MainContainer from "../components/corona/main";
 
-const Main = () => (
-  <div>
-    <h1>Main</h1>
-  </div>
-);
+const Main = () => <MainContainer />;
 export default Main;
