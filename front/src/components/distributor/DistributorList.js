@@ -15,4 +15,4 @@ const DistributorList = (props) => {
   return <DistributorListBox>{list}</DistributorListBox>;
 };
 
-export default DistributorList;
+export default React.memo(DistributorList);
