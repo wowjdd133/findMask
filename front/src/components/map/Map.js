@@ -113,12 +113,20 @@ const Map = ({ store }) => {
     // MapStore.overlay.push(customOverlay);
   };
 
+  const emptyingMarkers = async () => {
+    await store.MapStore.marker.forEach((marker) => {
+      marker.marker.setMap(null);
+    });
+    await store.MapStore.overlay.forEach((overlay) => {
+      overlay.setMap(null);
+    });
+  };
+
   useEffect(() => {
     const script = document.createElement("script");
     script.async = true;
     // eslint-disable-next-line operator-linebreak
-    script.src =
-      "https://dapi.kakao.com/v2/maps/sdk.js?appkey=74bbccc964da61465f5c3490a8256a77&autoload=false&libraries=services";
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_MAP_API_KEY}&autoload=false&libraries=services`;
     document.head.appendChild(script);
 
     script.onload = () => {
@@ -173,29 +181,31 @@ const Map = ({ store }) => {
     geocoder.addressSearch(address, (result, status) => {
       if (status === kakao.maps.services.Status.OK) {
         store.MapStore.m = 2000;
-        let coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-        store.MapStore.getData(result[0].y, result[0].x).then(() => {
-          if (store.MapStore.maskData.count > 0) {
-            const x = store.MapStore.maskData.count;
-            for (let i = 0; i < x; i += 1) {
-              let locPosition = new kakao.maps.LatLng(
-                store.MapStore.maskData.stores[i].lat,
-                store.MapStore.maskData.stores[i].lng
-              );
-              displayMarker(
-                locPosition,
-                store.MapStore.maskData.stores[i].remain_stat,
-                store.MapStore.map,
-                store.MapStore.maskData.stores[i].name,
-                store.MapStore.maskData.stores[i].code,
-                store.MapStore
-              );
+        emptyingMarkers().then(() => {
+          let coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+          store.MapStore.getData(result[0].y, result[0].x).then(() => {
+            if (store.MapStore.maskData.count > 0) {
+              const x = store.MapStore.maskData.count;
+              for (let i = 0; i < x; i += 1) {
+                let locPosition = new kakao.maps.LatLng(
+                  store.MapStore.maskData.stores[i].lat,
+                  store.MapStore.maskData.stores[i].lng
+                );
+                displayMarker(
+                  locPosition,
+                  store.MapStore.maskData.stores[i].remain_stat,
+                  store.MapStore.map,
+                  store.MapStore.maskData.stores[i].name,
+                  store.MapStore.maskData.stores[i].code,
+                  store.MapStore
+                );
+              }
             }
-          }
+          });
+          store.MapStore.map.setCenter(coords);
         });
-        store.MapStore.map.setCenter(coords);
       } else {
-        alert("주소가 정확하지 않습니다. 예) 제주시 제주특별자치도");
+        alert("주소가 정확하지 않습니다. 도로명주소를 입력해주세요.");
       }
     });
     e.preventDefault();
