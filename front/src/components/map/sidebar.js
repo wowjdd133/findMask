@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import { observer } from "mobx-react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
 
 const Sidebar = styled.div`
   display: flex;
@@ -20,7 +20,7 @@ const SideContent = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  height: 40%;
+  height: 60%;
   padding: 15px 15px 25px 25px;
   font-size: 23px;
 `;
@@ -35,11 +35,25 @@ const GetDirectionBox = styled.div`
   }
 `;
 
-const sidebar = ({ store }) => {
+const Button = styled.button`
+  width: 45px;
+  height: 45px;
+  background-image: url("/images/exit.png");
+  background-size: cover;
+`;
+
+//select Data 보여주는 바
+const sidebar = ({ store, setShowSidebar }) => {
   let data = store.selectData;
+  console.log(data);
   return (
     <Sidebar>
       <SideContent>
+        <Button
+          onClick={(e) => {
+            setShowSidebar(false);
+          }}
+        />
         <h1>{data.name}</h1>
         <p>수량: {store.getRemainStatToNum(data.remain_stat)}</p>
         <p>입고시간: {data.stock_at}</p>
@@ -47,6 +61,8 @@ const sidebar = ({ store }) => {
         <p>주소: {data.addr}</p>
         <GetDirectionBox>
           <a
+            target="_blank"
+            rel="noopener noreferrer"
             href={`https://map.kakao.com/link/to/${data.name},${data.lat},${data.lng}`}
           >
             길찾기
@@ -57,4 +73,4 @@ const sidebar = ({ store }) => {
   );
 };
 
-export default sidebar;
+export default observer(sidebar);
