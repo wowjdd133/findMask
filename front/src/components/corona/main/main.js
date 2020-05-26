@@ -6,24 +6,18 @@ import styled from "styled-components";
 import * as d3 from "d3";
 import * as topojson from "topojson";
 import koreaMap from "../../../data/map/skorea-municipalities-2018-topo-simple.json";
+import DataBox from "./DataBox";
+import DataTextContent from "./DataTextContent";
+import TitleText from "./TitleText";
+import SmallText from "./SmallText";
+import DataTextList from "./DataTextList";
 
 const DataContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100%;
-  width: 80%;
-`;
-
-const DataBox = styled.div`
-  display: flex;
-  justify-content: ${(props) =>
-    props.justify === "center" ? "center" : "space-between"};
-  height: 20%;
-  width: 100%;
-  border: 1px solid #ccc;
-  margin-top: 25px;
-  min-height: 200px;
+  width: 90%;
 `;
 
 const MapBox = styled.div`
@@ -34,13 +28,13 @@ const MapBox = styled.div`
   justify-content: center;
 `;
 
-const DataTextBox = styled.div`
-  width: 100%;
-`;
+// const DataTextBox = styled.div`
+//   width: 100%;
+// `;
 
 const DataChartBox = styled.div`
-  max-width: 400px;
-  width: 40%;
+  max-width: 500px;
+  width: 50%;
   height: 100%;
   border: 1px solid #ccc;
 `;
@@ -50,32 +44,6 @@ const DataTooltip = styled.div`
   position: absolute;
   white-space: pre;
   border-1px: 1px solid #ccc;
-`;
-
-const DataTextContent = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 2rem;
-  font-weight: 700;
-  width: ${(props) => (props.size === "big" ? "80%" : "30%")};
-  opacity: 0.7;
-  background: ${(props) => props.color};
-  border-radius: 2px;
-  height: 100%;
-`;
-
-const TitleText = styled.h1`
-  font-size: 4rem;
-  margin-top: 15px;
-`;
-
-const SmallText = styled.p`
-  margin-top: 0.2rem;
-  font-size: 0.75rem;
-  margin-bottom: 0.44rem;
-  color: gray;
 `;
 
 const main = (props) => {
@@ -181,77 +149,78 @@ const main = (props) => {
     tooltip.style.display = "none";
   };
 
+  const startDrawingMap = () => {
+    const geojson = topojson.feature(
+      koreaMap,
+      koreaMap.objects.skorea_municipalities_2018_geo
+    );
+    const width = 800;
+    const height = 600;
+    const svg = d3
+      .select(".d3")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+    const map = svg.append("g");
+    //geoMercator 메르카토르 투사법
+    const projection = d3.geoMercator().scale(1).translate([0, 0]);
+    //path 객체 따내기
+    const path = d3.geoPath().projection(projection);
+    //경계를 잡고 싶으면 bounds사용 bounds 1차원 배열은 xmax, xmin = longtitude, 2차원 배열은 ymax, ymin = lattitude
+    const bounds = path.bounds(geojson);
+    //축척 만들기
+    const widthScale = (bounds[1][0] - bounds[0][0]) / width;
+    const heightScale = (bounds[1][1] - bounds[0][1]) / height;
+    const scale = 1 / Math.max(widthScale, heightScale);
+    //translate
+    const xoffset =
+      width / 2 - (scale * (bounds[1][0] + bounds[0][0])) / 2 + 10;
+    const yoffset =
+      height / 2 - (scale * (bounds[1][1] + bounds[0][1])) / 2 - 10;
+    const offset = [xoffset, yoffset];
+    projection.scale(scale).translate(offset);
+    map
+      .selectAll("path")
+      .data(geojson.features)
+      .enter()
+      .append("path")
+      .attr("d", path);
+
+    svg
+      .append("g")
+      .selectAll("svg")
+      .data(store.cityData)
+      .enter()
+      .append("svg:image")
+      .attr("width", 32)
+      .attr("height", 32)
+      .attr("x", (d) => projection([d.lon, d.lat])[0])
+      .attr("y", (d) => projection([d.lon, d.lat])[1] - 100)
+      .attr("opacity", 0)
+      .attr("xlink:href", "/images/red.png")
+      .on("mouseover", (d) => {
+        showTooltip(d3.event, d);
+      })
+      .on("mouseout", () => {
+        hideTooltip();
+      })
+      .transition()
+      .ease(d3.easeElastic)
+      .duration(3000)
+      .delay((d, i) => i * 120)
+      .attr("opacity", 1)
+      .attr("y", (d) => projection([d.lon, d.lat])[1]);
+  };
+
   useEffect(() => {
-    console.log(store);
     store.getKoreaData().then(() => {
       store.getCityData().then(() => {
-        console.log(store.cityData);
-        //topojson을 통해 koreaMap geoJson 객체 리턴
-        const geojson = topojson.feature(
-          koreaMap,
-          koreaMap.objects.skorea_municipalities_2018_geo
-        );
-        //d3.geoCentroid로 geoJSON객체 중심 잡기.
-        const center = d3.geoCentroid(geojson);
-        const width = 800;
-        const height = 600;
-        const svg = d3
-          .select(".d3")
-          .append("svg")
-          .attr("width", width)
-          .attr("height", height);
-        const map = svg.append("g");
-        //geoMercator 메르카토르 투사법
-        const projection = d3.geoMercator().scale(1).translate([0, 0]);
-        //path 객체 따내기
-        const path = d3.geoPath().projection(projection);
-        //경계를 잡고 싶으면 bounds사용 bounds 1차원 배열은 xmax, xmin = longtitude, 2차원 배열은 ymax, ymin = lattitude
-        const bounds = path.bounds(geojson);
-        //축척 만들기
-        const widthScale = (bounds[1][0] - bounds[0][0]) / width;
-        const heightScale = (bounds[1][1] - bounds[0][1]) / height;
-        const scale = 1 / Math.max(widthScale, heightScale);
-        //translate
-        const xoffset =
-          width / 2 - (scale * (bounds[1][0] + bounds[0][0])) / 2 + 10;
-        const yoffset =
-          height / 2 - (scale * (bounds[1][1] + bounds[0][1])) / 2 - 10;
-        const offset = [xoffset, yoffset];
-        projection.scale(scale).translate(offset);
-        map
-          .selectAll("path")
-          .data(geojson.features)
-          .enter()
-          .append("path")
-          .attr("d", path);
-
-        const icons = svg
-          .append("g")
-          .selectAll("svg")
-          .data(store.cityData)
-          .enter()
-          .append("svg:image")
-          .attr("width", 32)
-          .attr("height", 32)
-          .attr("x", (d) => projection([d.lon, d.lat])[0])
-          .attr("y", (d) => projection([d.lon, d.lat])[1] - 100)
-          .attr("opacity", 0)
-          .attr("xlink:href", "/images/red.png")
-          .on("mouseover", (d) => {
-            showTooltip(d3.event, d);
-          })
-          .on("mouseout", () => {
-            hideTooltip();
-          })
-          .transition()
-          .ease(d3.easeElastic)
-          .duration(2000)
-          .delay((d, i) => i * 50)
-          .attr("opacity", 1)
-          .attr("y", (d) => projection([d.lon, d.lat])[1]);
+        startDrawingMap();
       });
     });
   }, [props.store.CoronaStore]);
+
+  //data 배열로 받아서 리스트만큼 띄우게
 
   return (
     <DataContainer>
@@ -263,21 +232,26 @@ const main = (props) => {
         </DataTextContent>
       </DataBox>
       <DataBox>
-        <DataTextContent color="orange">
-          <SmallText>현 확진자</SmallText>
-          <p>{store.koreaData.NowCase}</p>
-        </DataTextContent>
-        <DataTextContent color="green">
-          <SmallText>총 격리해제</SmallText>
-          <p>{store.koreaData.TotalRecovered}</p>
-        </DataTextContent>
-        <DataTextContent color="red">
-          <SmallText>총 사망</SmallText>
-          <p>{store.koreaData.TotalDeath}</p>
-        </DataTextContent>
+        <DataTextList
+          colors={["white", "white", "white"]}
+          labels={["현 확진자", "격리 해제", "총 사망"]}
+          data={[
+            store.koreaData.NowCase,
+            store.koreaData.TotalRecovered,
+            store.koreaData.TotalDeath,
+          ]}
+        />
       </DataBox>
       <DataBox>
-        <p>여기는 오늘 확진자, 격리해제, 검사중?</p>
+        <DataTextList
+          colors={["white", "white", "white"]}
+          labels={barData.labels}
+          data={[
+            store.koreaData.TodayRecovered,
+            store.koreaData.TodayDeath,
+            store.koreaData.TotalCaseBefore,
+          ]}
+        />
         <DataChartBox>
           <Bar data={barData} options={{ maintainAspectRatio: false }} />
         </DataChartBox>
@@ -286,14 +260,28 @@ const main = (props) => {
         <DataChartBox>
           <Doughnut data={data} options={options} />
         </DataChartBox>
-        <DataTextBox>
-          <p>양성, 음성, 검사중 자세한 데이터</p>
-        </DataTextBox>
+        <DataTextList
+          colors={["white", "white", "white"]}
+          labels={data.labels}
+          data={[
+            store.koreaData.checkingCounter,
+            store.koreaData.caseCount,
+            store.koreaData.notcaseCount,
+          ]}
+        />
       </DataBox>
       <DataBox>
-        <DataTextBox>
-          <p data-tip="hello world">%를 글로 나타내기</p>
-        </DataTextBox>
+        <DataTextList
+          colors={["white", "white", "white", "white", "white"]}
+          labels={data2.labels}
+          data={[
+            store.koreaData.city1p,
+            store.koreaData.city2p,
+            store.koreaData.city3p,
+            store.koreaData.city4p,
+            store.koreaData.city5p,
+          ]}
+        />
         <DataChartBox>
           <Doughnut data={data2} options={options} />
         </DataChartBox>
