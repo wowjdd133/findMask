@@ -1,12 +1,6 @@
 import React from "react";
+import WorldContainer from "../components/corona/world";
 
-const World = () => (
-  <div>
-    <h1>World</h1>
-    <h1>World</h1>
-    <h1>World</h1>
-    <h1>World</h1>
-  </div>
-);
+const World = () => <WorldContainer />;
 
 export default World;
