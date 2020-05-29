@@ -1,81 +1,58 @@
 import React, { useEffect, useState } from "react";
 import { observer, inject } from "mobx-react";
 import styled from "styled-components";
-import Spinner from "react-spinner-material";
-import Table from "rc-table";
-import { Line } from "react-chartjs-2";
-import "./World.css";
+import Line from "./LineChart";
+import Table from "./Table";
+import Spinner from "./Spinner";
+import Map from "./Map";
 
 const WorldContainer = styled.div`
   height: 100%;
   width: 80%;
+`;
+
+const WorldContent = styled.div`
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
-const Map = styled.div`
+const DataBox = styled.div`
   margin-top: 25px;
-  width: 1000px;
-  height: 600px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 80%;
 `;
-
-const BodyRow = styled.tr`
-  & td {
-    transition: all 0.3s;
-    padding: 0,
-    position: relative;
-    border: 1px solid #ccc;
-    border-top: 0;
-    border-left: 0;
-    box-sizing: 1px;
-    white-space: normal;
-    word-break: break-word;
-  }
-  &:hover td {
-    background: palevioletred;
-    transform: scale(1.01);
-  }
-`;
-
-const components = {
-  body: {
-    row: BodyRow,
-  },
-};
-
-const chartData = {
-  labels: ["January", "February", "March", "April", "May", "June", "July"],
-  datasets: [
-    {
-      label: "My First dataset",
-      fill: false,
-      lineTension: 0.1,
-      backgroundColor: "rgba(75,192,192,0.4)",
-      borderColor: "rgba(75,192,192,1)",
-      borderCapStyle: "butt",
-      borderDash: [],
-      borderDashOffset: 0.0,
-      borderJoinStyle: "miter",
-      pointBorderColor: "rgba(75,192,192,1)",
-      pointBackgroundColor: "#fff",
-      pointBorderWidth: 1,
-      pointHoverRadius: 5,
-      pointHoverBackgroundColor: "rgba(75,192,192,1)",
-      pointHoverBorderColor: "rgba(220,220,220,1)",
-      pointHoverBorderWidth: 2,
-      pointRadius: 1,
-      pointHitRadius: 10,
-      data: [65, 59, 80, 81, 56, 55, 40],
-    },
-  ],
-};
 
 const World = (props) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: "확진자",
+        fill: false,
+        backgroundColor: "rgb(0,0,255)",
+        borderColor: "rgb(0,0,255)",
+        data: [],
+      },
+      {
+        label: "사망",
+        fill: false,
+        backgroundColor: "rgb(255,0,0)",
+        borderColor: "rgb(255,0,0)",
+        data: [],
+      },
+      {
+        label: "격리 해제",
+        fill: false,
+        backgroundColor: "rgb(0,255,0)",
+        borderColor: "rgb(0,255,0)",
+        data: [],
+      },
+    ],
+  });
   const store = props.store.CoronaWorldStore;
   let coronaData = {
     data: {
@@ -95,77 +72,96 @@ const World = (props) => {
     values: {},
   };
 
-  const columns = [
-    {
-      title: "나라",
-      dataIndex: "Country",
-      key: "Country",
-      width: 300,
-      align: "center",
-    },
-    {
-      title: "확진자",
-      dataIndex: "TotalConfirmed",
-      key: "TotalConfirmed",
-      width: 300,
-      align: "center",
-    },
-    {
-      title: "격리 해제",
-      dataIndex: "TotalRecovered",
-      key: "TotalRecovered",
-      width: 300,
-      align: "center",
-    },
-    {
-      title: "사망자",
-      dataIndex: "TotalDeaths",
-      key: "TotalDeaths",
-      width: 300,
-      align: "center",
-    },
-  ];
+  const setData = (country) => {
+    coronaData.values[country.CountryCode] = {
+      ...country,
+    };
+  };
 
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      await store.getWorldData();
-      setLoading(false);
-      console.log(store.worldData);
-      store.worldData.Countries.forEach((data) => {
-        coronaData.values[data.CountryCode] = {
-          ...data,
-        };
+    store
+      .getWorldWIPDataToISODate()
+      .then(() => {
+        reformChartData(store.worldWIPData).then(() => {
+          store
+            .getWorldData()
+            .then(() => {
+              store.worldData.Countries.forEach((country) => {
+                setData(country);
+              });
+              new svgMap({
+                targetElementID: "svgMap",
+                data: coronaData,
+                colorMax: "#CC0033",
+                colorMin: "#FFE5D9",
+                colorNoData: "#E2E2E2",
+              });
+              console.log("done");
+            })
+            .catch((err) => {
+              console.error(err);
+            });
+        });
+      })
+      .catch((err) => {
+        console.error(err);
       });
-      new svgMap({
-        targetElementID: "svgCoronaMap",
-        data: coronaData,
-        colorMax: "#CC0033",
-        colorMin: "#FFE5D9",
-        colorNoData: "#E2E2E2",
-      });
+  }, []);
 
-      const background = document.getElementsByClassName("svgMap-map-wrapper");
-      background[0].setAttribute("background", "#E2E2E2");
-    };
-    getData();
-  }, [store]);
+  //array.push가 먹히지 않아서 array를 새로 선언하고 그대로 넣어줌.
+  const reformChartData = async (data) => {
+    let array = [];
+    let array2 = [];
+    let array3 = [];
+    let array4 = [];
+    await data.forEach((wipData, i) => {
+      array4.unshift(i + "일전");
+      array.push(wipData.TotalConfirmed);
+      array2.push(wipData.TotalDeaths);
+      array3.push(wipData.TotalRecovered);
+      // chartData.datasets[0].data.push(wipData.TotalConfirmed);
+      // chartData.datasets[1].data.push(wipData.TotalDeaths);
+      // chartData.datasets[2].data.push(wipData.TotalRecovered);
+    });
+    setChartData({
+      labels: array4,
+      datasets: [
+        {
+          ...chartData.datasets[0],
+          data: array,
+        },
+        {
+          ...chartData.datasets[1],
+          data: array2,
+        },
+        {
+          ...chartData.datasets[2],
+          data: array3,
+        },
+      ],
+    });
+    // chartData.labels = array4;
+    // chartData.datasets[0].data = array;
+    // chartData.datasets[1].data = array2;
+    // chartData.datasets[2].data = array3;
+    console.log(loading);
+  };
+
+  console.log("World");
 
   return (
     <WorldContainer>
-      <Line data={chartData} />
-      {loading != true ? (
-        <Map id="svgCoronaMap" />
-      ) : (
-        <Map>
-          <Spinner size={120} />{" "}
-        </Map>
-      )}
-      <Table
-        columns={columns}
-        data={store.worldData.Countries}
-        components={components}
-      />
+      <WorldContent>
+        <DataBox>
+          <Line data={chartData} loading={loading} />
+        </DataBox>
+        <DataBox>
+          <Map />
+        </DataBox>
+        <DataBox>
+          <Table data={store.worldData.Countries} />
+        </DataBox>
+      </WorldContent>
     </WorldContainer>
   );
 };
