@@ -1,5 +1,5 @@
 import styled from "styled-components";
-
+import { observer } from "mobx-react";
 import React from "react";
 
 const SmallTextStyled = styled.p`
@@ -13,4 +13,4 @@ const SmallText = (props) => {
   return <SmallTextStyled>{props.children}</SmallTextStyled>;
 };
 
-export default SmallText;
+export default observer(SmallText);

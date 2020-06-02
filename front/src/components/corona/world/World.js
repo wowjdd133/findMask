@@ -79,6 +79,7 @@ const World = (props) => {
   };
 
   useEffect(() => {
+    setLoading(true);
     store
       .getWorldWIPDataToISODate()
       .then(() => {
@@ -86,6 +87,7 @@ const World = (props) => {
           store
             .getWorldData()
             .then(() => {
+              setLoading(false);
               store.worldData.Countries.forEach((country) => {
                 setData(country);
               });
@@ -119,9 +121,6 @@ const World = (props) => {
       array.push(wipData.TotalConfirmed);
       array2.push(wipData.TotalDeaths);
       array3.push(wipData.TotalRecovered);
-      // chartData.datasets[0].data.push(wipData.TotalConfirmed);
-      // chartData.datasets[1].data.push(wipData.TotalDeaths);
-      // chartData.datasets[2].data.push(wipData.TotalRecovered);
     });
     setChartData({
       labels: array4,
@@ -140,14 +139,7 @@ const World = (props) => {
         },
       ],
     });
-    // chartData.labels = array4;
-    // chartData.datasets[0].data = array;
-    // chartData.datasets[1].data = array2;
-    // chartData.datasets[2].data = array3;
-    console.log(loading);
   };
-
-  console.log("World");
 
   return (
     <WorldContainer>
@@ -155,9 +147,7 @@ const World = (props) => {
         <DataBox>
           <Line data={chartData} loading={loading} />
         </DataBox>
-        <DataBox>
-          <Map />
-        </DataBox>
+        <DataBox>{loading ? <Spinner /> : <Map />}</DataBox>
         <DataBox>
           <Table data={store.worldData.Countries} />
         </DataBox>

@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { observer } from "mobx-react";
 
 const DataTextContentStyle = styled.div`
   display: flex;
@@ -18,6 +19,7 @@ const DataTextContentStyle = styled.div`
 `;
 
 const DataTextContent = (props) => {
+  console.log("DataTextContent");
   return (
     <DataTextContentStyle size={props.size}>
       {props.children}
@@ -25,4 +27,4 @@ const DataTextContent = (props) => {
   );
 };
 
-export default DataTextContent;
+export default observer(DataTextContent);

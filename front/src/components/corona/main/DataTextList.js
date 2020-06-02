@@ -1,8 +1,10 @@
 import React from "react";
 import DataTextContent from "./DataTextContent";
 import SmallText from "./SmallText";
+import { observer } from "mobx-react";
 
 const DataTextList = (props) => {
+  console.log("DataTextList");
   const { labels, data, colors } = props;
   const list = data.map((info, i) => {
     return (
@@ -15,4 +17,4 @@ const DataTextList = (props) => {
   return <>{list}</>;
 };
 
-export default DataTextList;
+export default observer(DataTextList);

@@ -129,7 +129,6 @@ const main = (props) => {
   };
 
   const showTooltip = (evt, d) => {
-    console.log(d);
     let tooltip = document.getElementById("tooltip");
     tooltip.textContent = `${d.name}
     확진자: ${d.totalCase}
@@ -220,6 +219,7 @@ const main = (props) => {
     });
   }, [props.store.CoronaStore]);
 
+  console.log(barData.datasets[0].data);
   //data 배열로 받아서 리스트만큼 띄우게
 
   return (

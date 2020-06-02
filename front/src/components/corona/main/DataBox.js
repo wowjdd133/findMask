@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { observer } from "mobx-react";
 
 const DataBoxStyle = styled.div`
   display: flex;
@@ -12,7 +13,8 @@ const DataBoxStyle = styled.div`
 `;
 
 const DataBox = (props) => {
+  console.log("DataBox");
   return <DataBoxStyle justify={props.justify}>{props.children}</DataBoxStyle>;
 };
 
-export default DataBox;
+export default observer(DataBox);
